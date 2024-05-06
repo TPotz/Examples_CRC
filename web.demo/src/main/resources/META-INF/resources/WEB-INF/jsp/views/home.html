@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<style>
+#header {background-color: #42505b; width: 100%; height: 10%; text-align: right;}
+#middle {background-color: #38424b; width: 100%; height: 85%; display: flex;text-align: right;}
+#footer {background-color: #42505b; width: 100%; height: 30px;text-align: center; color: #fff}
+#middle1 {background-color: #23292f; width: 160px; height: 100%;border-radius: 0 10px 10px 0;}
+#middle2 {width: 100%; height: 100%;text-align: center;}
+#welcome {font-size: 60px;color: #fff}
+#home {margin-bottom: 300px;}
+.but_menu {
+                    display: inline-block;
+                    outline: none;
+                    cursor: pointer;
+                    font-size: 16px;
+                    line-height: 20px;
+                    font-weight: 600;
+                    border-radius: 8px;
+                    padding: 14px 24px;
+                    border: 2px solid #42505b;
+                    background: transparent;
+                    color: #fff;
+			margin-top: 20px;
+			margin-right: 10px;
+
+}
+* {
+   font-family: Archivo Narrow;
+}
+.fa.fa-cube {color: #fff; font-size: 100px;}
+                
+html, body {
+  height: 100%;margin: 0;
+}
+table {color: #fff}
+a:link, a:visited {color: #1acec7}
+#emb {border: 2px solid orange}
+</style>
+
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div id="header"><button type="button" class="but_menu">LOGIN</button>
+    <button type="button" class="but_menu">REGISTER</button>
+</div>
+<div id="middle">
+
+<div id="middle1">
+ <button type="button" class="but_menu">HOME</button> 
+<button type="button" class="but_menu">CODEBOOK</button> 
+</div>
+
+<div id="middle2">
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>Column 1</th>
+            <th>Column 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Row 1 Data 1</td>
+            <td>Row 1 Data 2</td>
+        </tr>
+        <tr>
+            <td>Row 2 Data 1</td>
+            <td>Row 2 Data 2</td>
+        </tr>
+    </tbody>
+</table>
+<a href="#" onclick="mijena(this)">C:/Users/Tin Potz/IdeaProjects/web.demo/src/main/webapp/pdfs/ned_20220109_1200.pdf</a>
+<embed id="emb" src="../../pdfs/uto_20220111_1200.pdf" width="300px" height="300px" />
+
+</div>
+</div>
+<div id="footer">
+Copyright <a href="https://koios.hr/">Koios</a> 2022
+</div>
+</body>
+<script>
+function mijena(node) {
+let link = node.innerHTML;
+const arr = link.split("/");
+let end = arr[arr.length - 1];
+console.log("../../pdfs/"+end);
+document.getElementById("emb").setAttribute("src","../../pdfs/"+end)
+
+}
+</script>
+
+</html>

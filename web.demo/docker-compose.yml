@@ -1,0 +1,31 @@
+version: '3.1'
+services:
+  mysql_service:
+    container_name: db-compose
+    build: src/main/resources/sql/init/.
+    image: mysql-image
+    networks:
+      - compose-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=hiddenRoot
+      - MYSQL_DATABASE=tecaj
+      - MYSQL_USER=tin
+      - MYSQL_PASSWORD=somethingSafe55
+    ports:
+      - 3306:3306
+  app:
+    container_name: app-compose
+    image: app_image
+    networks:
+      - compose-network
+    ports:
+      - "8080:8080"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=prod"
+    build:
+      context: "./"
+      dockerfile: "Dockerfile"
+    depends_on:
+      - mysql_service
+networks:
+  compose-network:
