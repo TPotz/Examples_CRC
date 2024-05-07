@@ -1,76 +1,24 @@
-# Getting Started with Create React App
+Here are some of my project and snippets of code.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+web.demo > an old java demo app I've made but shows essentially what Spring mechanisms I know and use in general
+nek_front > React.js app in progress that usualy communicates with another java web service and an Oracle DB in a docker container that in the end shows some locations and scoring of realestate (/nek_front/work_in_progress.png)
+Powershell snippet > It's a powershell-based app with Windows Forms GUI intended to be used for updating project modules using maven (mvn clean install) etc.
+PLSQL > I've made code that shows how well filled columns are in an Oracle DB table, so that it would show how much more information can one gather by creating a join query with that table
+SQL_snippets > Just an example for analyzing tables
+Docker_snippets > simple Dockerfile and yaml code I've been using lately
 
 
 
-ZAPISI
--dobivanje selecta zupanije
-document.getElementById("zupanijeSelect").value
+
+When I'm writing the code I usually stick to: make it work then format it to the standard of the project while simultaneously watching sonarLint highlighted problems and warnings in the code.
+We have code reviews for every merge request, so I'm used to going by the good practices of clean code, even though I'm sometimes careless when writing the code for my own private projects.
+I have a problem with sharing the newer java "realestate" project I'm woriking on as I have plans to monetize the app as service for realestate agencies.
+
+All in all, I handle Spring framework on a functional level, often forgetting what and how some of the annotations work but easily remembering myself with the documentation or code overview when needed.
+In the projects that I'm currently working on in the firm, Spring is lightly used as most of the code is legacy (the project being 10+ years old) so most of the configurations are still written in xml.
+When it comes to tools and languages, I'm am sort of an agnostic, almost not caring what is used for the development, but rather enjoying making it work and seeng the end result.
+
+
+Lately, I've been using React.js, but Angular and Vue seem to be very similar. They all have this notion of creating your own components that are made of HTML which are then dynamically changed by the result of a function. 
+Also using hooks which are lambda functions that are executed when needed in certain steps of generating the view, like trigers. 
+I would be very happy to learn Vue for example, which I haven't used before, especially since it gained popularity in the past few years.

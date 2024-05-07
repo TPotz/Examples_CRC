@@ -1,0 +1,30 @@
+//a typical Dockerfile for building a container
+FROM openjdk:11
+
+ENV PORT 8080
+EXPOSE 8080
+
+COPY *.jar /opt/app.jar
+WORKDIR /opt
+CMD ["java", "-jar", "app.jar"]
+
+
+//after a created Dockerfile I would run a command: docker build -t tussim .
+
+//a typical yaml file that I've used to create a container from created image (it was a simulator with web services that returned sample responses which can be placed in /opt/sampleResponses of the container)
+version: "3.9"
+services:
+  etias:
+    container_name: TUSSim
+    image: tussim
+    restart: always
+    ports:
+      - "8090:8080"
+    volumes:
+      - tusSimVolSampleResponses:/opt/sampleResponses
+      
+volumes:
+  tusSimVolSampleResponses:
+
+
+//finally I would run: docker compose up -d (which creates the container)

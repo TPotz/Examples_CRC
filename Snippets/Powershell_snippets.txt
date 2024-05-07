@@ -1,0 +1,240 @@
+#Konstante
+$capees_root_path = "C:\ProjectFiles"
+$nbmis_root_path = "C:\ProjectFiles\TUS\TUS-2.2.0"
+$font = New-Object System.Drawing.Font("Bahnschrift Light",14,[System.Drawing.FontStyle]::Regular)
+$smallFont = New-Object System.Drawing.Font("Bahnschrift Light",8,[System.Drawing.FontStyle]::Regular)
+
+#GUI dio
+Add-Type -assembly System.Windows.Forms
+$main_form = New-Object System.Windows.Forms.Form
+$main_form.Text ='GUI for my PoSh script'
+$main_form.Width = 1200
+$main_form.Height = 800
+$main_form.BackColor = "#f5ebe0"
+
+$capees_combo = New-Object System.Windows.Forms.ComboBox
+$capees_combo.Width = 300
+$capees_combo.FlatStyle = "Flat"
+$capees_combo.Cursor = [System.Windows.Forms.Cursors]::Hand
+$capees_combo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList;
+$capees_modules = "All","tus-core","tus-ws","tus-main"
+Foreach ($module in $capees_modules)
+{
+$branch = ""
+if ($module -ne "All"){
+$update_path = $capees_root_path + "\" + $module
+cd $update_path; $branch = git branch --show-current; $branch = $branch.Substring(0,8)
+}
+$capees_combo.Items.Add($module+ "     " + $branch)
+}
+$capees_combo.Location  = New-Object System.Drawing.Point(160,100)
+$capees_combo.Font = $font
+$capees_combo.({write-host "gasdfg"; write-output "gasgd"})
+$main_form.Controls.Add($capees_combo)
+
+$command_combo = New-Object System.Windows.Forms.ComboBox
+$command_combo.Width = 300
+$command_combo.FlatStyle = "Flat"
+$command_combo.Cursor = [System.Windows.Forms.Cursors]::Hand
+$command_combo.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList;
+$commands = "mvn clean install","mvn clean install -U","git pull"
+Foreach ($command in $commands)
+{$command_combo.Items.Add($command);}
+$command_combo.Location  = New-Object System.Drawing.Point(160,148)
+$command_combo.Font = $font
+$main_form.Controls.Add($command_combo)
+
+$scriptBox = New-Object System.Windows.Forms.RichTextBox
+$scriptBox.Multiline = $True;
+$scriptBox.Location  = New-Object System.Drawing.Point(60,300)
+$scriptBox.Size = New-Object System.Drawing.Size(1080,420)
+$scriptBox.Scrollbars = "Vertical" 
+$scriptBox.ReadOnly = $True
+$scriptBox.Font = $font
+$main_form.Controls.Add($scriptBox)
+
+$actionLabel = New-Object System.Windows.Forms.Label
+$actionLabel.Text = "LOADING"
+$actionLabel.Location  = New-Object System.Drawing.Point(760,100)
+$actionLabel.Size = New-Object System.Drawing.Size(140,40)
+$actionLabel.BackColor = "#ff9f1c"
+$actionLabel.ForeColor = "#EFE6DD"
+$actionLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+$actionLabel.Visible = $false
+$actionLabel.Font = $font
+$main_form.Controls.Add($actionLabel)
+
+$actionInfoLabel = New-Object System.Windows.Forms.Label
+$actionInfoLabel.Text = "Project All Capees updated!`r`n mvn clean install -U `r`n 22.05.2023. 15:30"
+$actionInfoLabel.Location  = New-Object System.Drawing.Point(640,160)
+$actionInfoLabel.Size = New-Object System.Drawing.Size(380,77)
+$actionInfoLabel.BackColor = "#ff9f1c"
+$actionInfoLabel.ForeColor = "#EFE6DD"
+$actionInfoLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+$actionInfoLabel.Visible = $false
+$actionInfoLabel.Font = $font
+$main_form.Controls.Add($actionInfoLabel)
+
+$update_button = New-Object System.Windows.Forms.Button
+$update_button.Location = New-Object System.Drawing.Size(240,220)
+$update_button.Size = New-Object System.Drawing.Size(100,30)
+$update_button.Text = "Update"
+$update_button.Add_Click({updateNow})
+$update_button.Font = $font
+$update_button.BackColor = "#edede9"
+$main_form.Controls.Add($update_button)
+
+$branchLabel = New-Object System.Windows.Forms.Label
+$branchLabel.Text = "Branch-1111"
+$branchLabel.Location  = New-Object System.Drawing.Point(390,80)
+$branchLabel.Size = New-Object System.Drawing.Size(70,20)
+$branchLabel.BackColor = "#ff9f1c"
+$branchLabel.ForeColor = "#EFE6DD"
+$branchLabel.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+$branchLabel.Font = $smallFont
+$main_form.Controls.Add($branchLabel)
+
+
+#Funkcije
+Function updateNow(){
+$update_path = ""
+$scriptBox.Text = ""
+$varAction = $command_combo.SelectedItem
+if ($capees_combo.SelectedItem -eq "All Capees     ") {
+$actionLabel.Text = "LOADING"
+$actioniNFOLabel.Text = "Updating " + $capees_combo.SelectedItem
+$actionLabel.BackColor = "#ff9f1c"
+$actionInfoLabel.BackColor = "#ff9f1c"
+$actionLabel.Visible = $true
+$actionInfoLabel.Visible = $true
+$count = 0
+foreach ($path in $capees_modules) {
+if ($path -notlike "*All*") {
+$path = $path.Split("     ")[0]
+$update_path = $capees_root_path + "\" + $path
+write-host "going on path: " $update_path "and running: " $command_combo.SelectedItem 
+$actionLabel.Text = "LOADING"
+$actioniNFOLabel.Text = "Updating " + $capees_combo.SelectedItem + " $count/3"
+#izvrsavanje komande
+cd $update_path; $response = Invoke-Expression $varAction
+
+foreach ($line in $response) {
+$scriptBox.AppendText($line+"`r`n");
+}
+
+$error =  $scriptBox.Text | Select-String -Pattern 'BUILD FAILURE' -CaseSensitive -SimpleMatch
+if ($error.Count -gt 0) {
+$actionInfoLabel.BackColor = "#BB4430"
+$actionLabel.BackColor = "#BB4430"
+$actionLabel.Text = "FAILURE"
+$time = Get-Date -Format "dd/MM/yyyy HH:mm"
+$actionInfoLabel.Text = "Project " + $capees_combo.SelectedItem + "failed to build!`r`n" + $command_combo.SelectedItem + "`r`n" + $time
+toBottom
+break
+} 
+
+}
+#Start-Sleep -Seconds 3
+$count +=1
+
+}
+
+} else {
+$path = $capees_combo.SelectedItem.Split("     ")[0]
+$update_path = $capees_root_path + "\" + $path
+write-host "going on path: " $update_path "and running: " $command_combo.SelectedItem
+$actionLabel.Text = "LOADING"
+$actioniNFOLabel.Text = "Updating " + $capees_combo.SelectedItem
+$actionLabel.Visible = $true
+$actionInfoLabel.Visible = $true
+cd $update_path;
+#ovdje se izvršava komanda
+$response = Invoke-Expression $varAction
+foreach ($line in $response) {
+$scriptBox.AppendText($line+"`r`n");
+}
+}
+
+
+$time = Get-Date -Format "dd/MM/yyyy HH:mm"
+$error =  $scriptBox.Text | Select-String -Pattern 'BUILD FAILURE' -CaseSensitive -SimpleMatch
+if ($error.Count -gt 0) {
+$actionInfoLabel.BackColor = "#BB4430"
+$actionLabel.BackColor = "#BB4430"
+$actionLabel.Text = "FAILURE"
+$actionInfoLabel.Text = "Project " + $capees_combo.SelectedItem + " failed to build!`r`n" + $command_combo.SelectedItem +  "`r`n" + $time
+toBottom
+
+} else {
+$actionInfoLabel.BackColor = "#7EBDC2"
+$actionLabel.BackColor = "#7EBDC2"
+$actionLabel.Text = "SUCCES"
+$actionInfoLabel.Text = "Project " + $capees_combo.SelectedItem + " updated!`r`n" + $command_combo.SelectedItem +  "`r`n" + $time
+toBottom
+}
+
+paintMessages
+
+}
+
+Function toBottom() {
+$scriptBox.SelectionStart = $scriptBox.Text.Length;
+$scriptBox.ScrollToCaret();
+}
+
+Function paintMessages(){
+paintYellow
+paintRed
+}
+
+Function paintYellow(){
+$counter = 0
+$word = "[WARNING]"
+$pos = $scriptBox.Text.IndexOf($word,$counter)
+ while($pos -ne -1) {
+
+ $counter = $pos + $word.Length
+$scriptBox.selecti
+$scriptBox.SelectionStart = $pos
+$scriptBox.SelectionLength = $word.Length
+$scriptBox.SelectionColor = '#FABC2A'
+$pos = $scriptBox.Text.IndexOf($word,$counter)
+}
+}
+
+Function paintRed(){
+$counter = 0
+$word = "[ERROR]"
+$pos = $scriptBox.Text.IndexOf($word,$counter)
+ while($pos -ne -1) {
+
+ $counter = $pos + $word.Length
+$scriptBox.selecti
+$scriptBox.SelectionStart = $pos
+$scriptBox.SelectionLength = $word.Length
+$scriptBox.SelectionColor = 'red'
+$pos = $scriptBox.Text.IndexOf($word,$counter)
+}
+}
+
+$main_form.ShowDialog()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//For finding string inside files, recursively
+$result = Get-ChildItem -recurse | Select-String -pattern "patternW" | group path | select name | where { ! $_.PSIsContainer }
+foreach ($line in $result) {
+write-host "nalazak" -f red $line
+}

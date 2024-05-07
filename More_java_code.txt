@@ -1,0 +1,152 @@
+Some simple java code from a personal project related to realestate scoring by parsing realestate browsers
+/**
+     * Briše duplikate koji nastaju pretraživanjem gohome stranice jer gohome zapravo sažima druge stranice.
+     * <br>
+     * U budućnosti bi trebalo dodati još vrsta duplikata koje treba brisati preko ove metode.
+    */
+    private static ArrayList<Nekretnina> removeDuplicates(ArrayList<Nekretnina> finalNekretnine) {
+        System.err.printf("%n[DATA] Količina nekretnina prije brisanja duplikata: %s%n",finalNekretnine.size());
+
+        System.err.println("Brišu se gohome duplikati!");
+        //rješavanje duplikata koji nastaju zbog gohome-a (on ima link koji ima redirect sa base64 formatom koji je jsonstring, a čisti link za redirect je u jsonstringu)
+        ArrayList<Nekretnina> gohomeList = new ArrayList<>(finalNekretnine.stream().filter(nekretnina -> nekretnina.getLink().contains("gohome")).collect(Collectors.toList()));
+
+        System.out.println("Ovo su nekretnine koje imaju gohome u linku");
+        Map<String, String> gohomeMapa = new HashMap<>();
+        ObjectMapper mapper = new ObjectMapper();
+        //pattern za naći base64 u gohome linku
+        Pattern pattern = Pattern.compile("data=(.*)");
+        Matcher matcher;
+        String baseCode;
+        String jsonString;
+
+        //stavljanje u mapu key:value, odnosno čisti link, te stari link
+        for (Nekretnina nekretnina : gohomeList) {
+            matcher = pattern.matcher(nekretnina.getLink());
+            matcher.find();
+            baseCode = matcher.group(1);
+
+            byte[] decoded = Base64.getDecoder().decode(baseCode);
+            jsonString = new String(decoded, StandardCharsets.UTF_8);
+
+            try {
+                gohomeMapa.put(mapper.readTree(jsonString).get("Izvor").asText(), nekretnina.getLink());
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        //ovdje se upisuju duplikati u izvornom gohome/redirect obliku
+        ArrayList<String> duplikatiGohome = new ArrayList<>();
+
+        finalNekretnine.forEach(nekretnina -> {
+            if (gohomeMapa.keySet().contains(nekretnina.getLink())) {
+                duplikatiGohome.add(gohomeMapa.get(nekretnina.getLink()));
+                System.out.printf("Za ovaj item postoji gohome duplikat: %s%n",nekretnina.toString());
+            }
+        });
+
+        //brisanje gohome duplikata iz finalliste
+        Iterator<Nekretnina> i = finalNekretnine.iterator();
+        Nekretnina elementZaBrisati;
+        while (i.hasNext()) {
+            elementZaBrisati = i.next(); // must be called before you can call i.remove()
+            if (duplikatiGohome.contains(elementZaBrisati.getLink())) {
+                i.remove();
+            }
+        }
+
+        //ovdje ide brisanje neovisno o gohomeu, ono jednostavno gdje gleda ima li elemenata koji su dolosvno po svemu isti, gdje im je isti i link pa njih miče
+        finalNekretnine = finalNekretnine.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
+
+        System.err.printf("[DATA] Količina nekretnina nakon brisanja duplikata: %s%n",finalNekretnine.size());
+
+        return finalNekretnine;
+    }
+
+
+
+
+
+
+
+
+//Parsiranje pronađenih elemenata/ nekretnina
+for (Element foundElement : foundElements) {
+                System.out.println("Element %s: %s".formatted(domain,foundElement.text()));
+
+                Integer cijena = 0;
+                Integer povrsina = 0;
+                String lokacija = "";
+
+if (domain.equals("realestatecroatia")) {
+                    cijena = cleanNumber(foundElement.select(".td_crtadole[width=150] strong:first-child").text());
+                    lokacija = foundElement.select(".td_crtadole[width=150] strong:nth-child(6)").text();
+                    if (lokacija.equals("")) {lokacija="UNKOWN";}
+                    povrsina = parseSquares(foundElement.text());
+
+                    Nekretnina novaNekretnina = new Nekretnina(lokacija,
+                            "https://www.realestatecroatia.com/hrv/" + foundElement.select(".td_crtadole strong a").get(1).attr("href"),
+                            cijena, povrsina,getScore(cijena, povrsina, lokacija));
+
+                    //gleda je li nekretnina čista, treba li biti u finalu
+                    if (itemClean(domain, foundElement, novaNekretnina)) {
+                        finalNekretnine.add(novaNekretnina);
+                    }
+                } else if (domain.equals("realitica")) {
+                    lokacija = getMatch("€\\d.*? (.*?), " + locationUrlParameters.get(getDomain(page))[wantedRegion.index()], foundElement.text());
+                    cijena = cleanNumber(getMatch("<strong>€(.*?)<", foundElement.html()));
+                    povrsina = parseSquares(foundElement.text());
+
+                   Nekretnina novaNekretnina = new Nekretnina(lokacija,
+                            foundElement.select("div:nth-child(3) a:last-child").attr("href"), cijena, povrsina,getScore(cijena, povrsina, lokacija));
+
+                   //gleda je li nekretnina čista, treba li biti u finalu
+                    if (itemClean(domain, foundElement, novaNekretnina)) {
+                        finalNekretnine.add(novaNekretnina);
+                    }
+                } ....
+};
+
+
+
+/**
+     * Osnovna metoda davanja bodova na temelju cijene i kvadrature (uključujući cijene po županiji) te poželjnost lokacija
+     */
+    public static Integer getScore(Integer price, Integer povrsina, String lokacija) {
+        Integer ocjena = 0;
+        Integer maxcijena = (int)(searchPrice + (searchPrice * 0.2)); //cijena preko koje sve nekretnine dobiju 0. 20% veća od traženog
+        //bitna razlika određuje kada se dobiva bod za ocjenu. Račun je proizvoljan. Ja sam stavio da veliku ocjenu dobivaš ako je cijena ispod pola te cijene koju tražiš
+        //a ostale ocjene su ta razlika između searchprice i pola od searchprice što su tri točke breaka, odnosno 4 razine
+        Integer bitnaRazlikaCijene = searchPrice / 2 / 3;
+        Integer bitnaRazlikaKvadrata = getGreatDiferenceSquares();
+        boolean shouldScoreSquares = true;
+        //[ASSUM] shouldScorePrice ne postoji jer ako nema validne cijene ne ide se dalje davati bodove
+
+
+        // Rješavanje nepoželjnih lokacija
+        if (stringContainsItemFromList(lokacija.toLowerCase(), nepozeljneLokacije)) {
+            printWarning("Postavljena ocjena 0 za lokaciju (%s) jer se nalazi u nepoželjnim lokacijama!".formatted(lokacija));
+            return 0;
+        }
+        //[ASSUM] provjera je li cijena jednaka površini ili je cijena 1, jer za takve objekte zapravo nema cijene
+        if (price.equals(povrsina) || price.equals(1) || price.equals(0)) {
+            return 0;
+        }
+        //[ASSUM] da je površina 0 i 1 ništa, a da već 3 je prava površina
+        if (povrsina < 2) {
+            shouldScoreSquares = false;
+        }
+        //provjera je li možda cijena po kvadratu a ne za cijeli objekt, onda ispravi cijenu (ako postoji površina)
+        if (price <= maxPriceSquared(wantedType) && povrsina > 2) {
+            price=price*povrsina;
+        } else if (price <= maxPriceSquared(wantedType) && povrsina < 2) {
+            printWarning("Postavljena ocjena 0 za lokaciju (%s) jer je cijena jako mala, a nema kvadrata da dobijemo pravu vrijednost!".formatted(lokacija));
+            return 0; // jer nije prava cijena, a nemamo kvadrate da pravu cijenu dobijemo
+        }
+        //[ASSUM] sve iznad max cijene se ne računa (početna cijena 30k, max cijena je 36k npr.)
+        if (price > maxcijena) {
+            return 0; // Nemoj se dalje baviti elementom ako je prešao max cijenu
+        }
+.....
+};

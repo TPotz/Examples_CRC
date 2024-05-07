@@ -1,0 +1,23 @@
+--Get difference of the amount of data between two same tables from different environments/shemas
+select a.godina,a.dsa,b.prd From
+(select to_char(DATUM,'YYYY') AS godina, count(*) as dsa from shema.someTable
+GROUP BY to_char(DATUM,'YYYY')
+ORDER BY godina) A 
+INNER JOIN 
+(select to_char(DATUM,'YYYY') AS godina, count(*) as prd from shemaprd.someTable 
+GROUP BY to_char(DATUM,'YYYY')
+ORDER BY godina) B
+ON A.godina = B.godina
+;--mogućnost dodatka postotka razlike, kao a/(a - b) *100 možda
+
+
+
+--show percentage of nulls per column in it's timeframe--
+select 
+'caplnakr' AS COL_NAME,
+count(*) as nulls,
+round(count(*)/(select count(*) from odsp.capl)*100)||'%' as PERC,
+MIN(capldato) AS MIN_DATE,
+max(capldato) AS MAX_DATE,
+(SELECT MIN(capldato) FROM ODSP.CAPL) || ' - '||(SELECT MAX(capldato) FROM ODSP.CAPL) AS WHOLE_TABLE_DATE_FRAME
+from odsp.capl where caplnakr is null group by 1;

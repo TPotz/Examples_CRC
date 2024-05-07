@@ -1,0 +1,81 @@
+SET SERVEROUTPUT ON;
+--IN7 : Prikazuje generalnu integriranost tablica (relativna povezanost, moguća) 17.11.2023
+--ako je vrijednost FK kolone pristuna onda imaš 100, 90 ili 80 posto vjerojatnost da ćeš naći i druge kolone
+--ovdje postoje duplikati tablica, ali zbog različitih kolona koje se gledaju, tako da može biti tablica_2 sa drugačijem stanjem i kolonama (ali samo do _2)
+declare 
+startingTable VARCHAR2(50) := 'PROMET';            --<------
+startingColumn VARCHAR2(50) := 'PMT_ID';           --<------
+tableOwner VARCHAR2(20) := 'TUS';                --<------
+
+fullCnt number :=0; --suma full integracijskih kolona 
+goodCnt number :=0;
+moderateCnt number :=0;
+perc number :=0; --temp varijabla sa postaviti percentage popunjenosti kolone
+fullKolone VARCHAR2(800) := ''; --lista full integrity kolona
+moderateKolone VARCHAR2(800) := '';
+goodKolone VARCHAR2(800) := '';
+sveTablice VARCHAR2(800) := 'tako'; --mora imate neku vrijednost inaće ne radi INSTR usporedba dolje
+begin  
+dbms_output.put_line('TABLE '||startingTable||' {');  -- printa početnu tablicu i prvu kolonu da se na nju mogu stvari referencirati
+dbms_output.put_line(startingColumn||' START' || chr(10) ||' }');
+
+--ZA SVAKI NAZIV TABLICE
+      for trenutnaTablica in ( SELECT DISTINCT a.table_name as naziv, a.column_name as kolona
+                FROM all_cons_columns a
+                JOIN all_constraints c ON a.owner = c.owner
+                    AND a.constraint_name = c.constraint_name
+                JOIN all_constraints c_pk ON c.r_owner = c_pk.owner
+                       AND c.r_constraint_name = c_pk.constraint_name
+                join USER_CONS_COLUMNS uc on uc.constraint_name = c.r_constraint_name
+                WHERE  C.R_OWNER = tableOwner AND a.TABLE_NAME != startingTable AND UC.TABLE_NAME = startingTable AND uc.column_name = startingColumn)
+             LOOP
+             --dbms_output.put_line(trenutnaTablica.naziv);
+              if INSTR(sveTablice, trenutnaTablica.naziv||', ') < 1 then  ---ako postoji tablica već u listi svih tablica, onda referencija tablicu _2
+             dbms_output.put_line('Ref: ' || startingTable ||'.'|| startingColumn || ' > ' || trenutnaTablica.naziv ||'.'|| trenutnaTablica.kolona);
+             else
+             dbms_output.put_line('Ref: ' || startingTable ||'.'|| startingColumn || ' > ' || trenutnaTablica.naziv || '_2' ||'.'|| trenutnaTablica.kolona);
+             end if;
+            for r in ( select column_name, nullable from all_tab_columns where table_name = trenutnaTablica.naziv 
+            and not Regexp_Like (column_name, 'DATUM_UNOSA|DATUM_PROMJENE|KORISNIK_UNOSA|KORISNIK_PROMJENE|'||substr(column_name,0,4) || 'ID')--ovaj regexp dio isključuje analizu nad nekim kolonama i id kolone tablice
+            and owner in ('NBMIS','EES')  --postavljeno kako ne bi uzeo više isto imenih tablica sa različitih šema
+            order by column_id ) --pronađi sve kolone i dodijeli im Y ili N je li nullable, a dodaj i referencnu kolonu koja možda neće ući inače ako 
+  loop
+      if r.nullable = 'N' and r.column_name != trenutnaTablica.kolona then
+         fullCnt := fullCnt + 1; 
+         fullKolone:= CONCAT(fullKolone,r.column_name ||' 100' || chr(10)); ---chr(10) je znak za novi line u SQL-u
+      END IF;
+      if r.nullable = 'Y' and r.column_name != trenutnaTablica.kolona then
+         EXECUTE IMMEDIATE 'SELECT ROUND(count(case when '||r.column_name||' is null then null else 1 end)/COUNT(*) * 100) FROM '||trenutnaTablica.naziv into perc ; --mjeri percentage popunjenosti kolone
+         --dbms_output.put_line(r.column_name||': '||perc);
+         if perc = 100 then fullCnt := fullCnt + 1;
+         fullKolone:= CONCAT(fullKolone,r.column_name ||' 100' || chr(10));
+         end if;
+         if perc >= 90 and perc < 100 then goodCnt := goodCnt + 1; 
+         goodKolone:= CONCAT(goodKolone,r.column_name ||' 90' || chr(10));
+         end if;
+         if perc >= 80 and perc < 90 then moderateCnt := moderateCnt + 1; 
+         moderateKolone:= CONCAT(moderateKolone,r.column_name ||' 80' || chr(10));
+         end if;
+      END IF;
+      if r.column_name = trenutnaTablica.kolona then
+         fullCnt := fullCnt + 1; 
+         fullKolone:= CONCAT(fullKolone,r.column_name ||' FK' || chr(10)); ---chr(10) je znak za novi line u SQL-u
+      END IF;
+      
+  end loop;
+  
+  if INSTR(sveTablice, trenutnaTablica.naziv||', ') < 1 then ---ako postoji tablica već u listi svih tablica, onda dodaj broj u ime
+    dbms_output.put_line('TABLE '||trenutnaTablica.naziv||' {');
+    dbms_output.put_line(fullKolone||goodKolone || moderateKolone || '}');
+    sveTablice:= CONCAT(sveTablice,trenutnaTablica.naziv ||', ');
+    else                                                             
+    dbms_output.put_line('TABLE '||trenutnaTablica.naziv||'_2'||' {');
+    dbms_output.put_line(fullKolone||goodKolone || moderateKolone || '}');
+  END IF;
+   
+   fullKolone := '';
+   moderateKolone := '';
+   goodKolone := '';
+
+END LOOP;
+end;
