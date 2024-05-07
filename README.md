@@ -6,6 +6,7 @@ Powershell snippet > It's a powershell-based app with Windows Forms GUI intended
 PLSQL > I've made code that shows how well filled columns are in an Oracle DB table, so that it would show how much more information can one gather by creating a join query with that table
 SQL_snippets > Just an example for analyzing tables
 Docker_snippets > simple Dockerfile and yaml code I've been using lately
+More_java_code > some parts of my code from a private project regarding realestate
 
 
 
